@@ -1,5 +1,5 @@
-x,y,r,z,a,b
-10,10,100,20,red,Red
-10,50,200,20,grenn,Grenn
-10,90,150,20,blue,Blue
-10,130,220,20,yellow,Yellow
+x,y,r,z,a,b,c
+10,10,100,20,red,Red,120
+10,50,200,20,grenn,Grenn,220
+10,90,150,20,blue,Blue,170
+10,130,220,20,yellow,Yellow,240
