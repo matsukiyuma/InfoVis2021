@@ -1,16 +1,25 @@
 d3.csv("https://matsukiyuma.github.io/InfoVis2021/W08/data3.csv")
     .then( data => {
-        data.forEach( d => { d.x = +d.x; d.y = +d.y; });
+        data.forEach( d => { d.y = +d.y;});
 
         var config = {
             parent: '#drawing_region',
-            width: 256,
+            width: 512,
             height: 256,
-            margin: {top:20, right:20, bottom:20, left:60}
+            title: 'popular food',
+            margin: {top:40, right:10, bottom:60, left:100},
+            xlabel: 'value',
+            ylabel: 'Name'
         };
 
-        const barchart = new BarChart( config, data );
-        barchart.update();
+        const bar_chart = new BarChart( config, data );
+        bar_chart.update();
+
+        d3.select('#reverse')
+            .on('click', d => {
+              data.reverse();
+              bar_chart.update(data);
+            });
     })
     .catch( error => {
         console.log( error );
@@ -23,8 +32,11 @@ class BarChart {
             parent: config.parent,
             width: config.width || 256,
             height: config.height || 256,
-            margin: config.margin || {top:10, right:10, bottom:10, left:10}
-        }
+            margin: config.margin || {top:10, right:10, bottom:10, left:10},
+            title: config.title || '',
+            xlabel: config.xlabel || '',
+            ylabel: config.ylabel || ''
+        };
         this.data = data;
         this.init();
     }
@@ -46,32 +58,58 @@ class BarChart {
             .range( [0, self.inner_width] );
 
         self.yscale = d3.scaleBand()
-            .range( [0, self.inner_height] );
+            .range( [0, self.inner_height] )
+            .paddingInner(0.2)
+            .paddingOuter(0.1);
+
 
         self.xaxis = d3.axisBottom( self.xscale )
-            .ticks(6);
+            .ticks(5)
+            .tickSizeOuter(0);
+
+        self.yaxis = d3.axisLeft( self.yscale )
+            .tickSizeOuter(0);
 
         self.xaxis_group = self.chart.append('g')
             .attr('transform', `translate(0, ${self.inner_height})`);
 
-        self.yaxis = d3.axisLeft( self.yscale )
-            .ticks(6);
 
-        self.yaxis_group = self.chart.append('g')
-            .attr('transform', `translate(0, 0)`);
+        self.yaxis_group = self.chart.append('g');
+    
+        const title_space = 10;
+        self.svg.append('text')
+            .style('font-size', '20px')
+            .style('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('x', self.config.width / 2)
+            .attr('y', self.config.margin.top - title_space)
+            .text( self.config.title );
+
+        const xlabel_space = 40;
+        self.svg.append('text')
+            .attr('x', self.config.width / 2)
+            .attr('y', self.inner_height + self.config.margin.top + xlabel_space)
+            .text( self.config.xlabel );
+
+        const ylabel_space = 90;
+        self.svg.append('text')
+            .attr('transform', `rotate(-90)`)
+            .attr('y', self.config.margin.left - ylabel_space)
+            .attr('x', -(self.config.height / 2))
+            .attr('text-anchor', 'middle')
+            .attr('dy', '1em')
+            .text( self.config.ylabel );
     }
 
     update() {
         let self = this;
+        const space = 10;
+        const xmin = 0;
+        const xmax = d3.max(self.data, d => d.y) + space;
+        self.xscale.domain([xmin, xmax]);
 
-        const xmin = d3.min( self.data, d => d.x );
-        const xmax = d3.max( self.data, d => d.x );
-        self.xscale.domain([0, d3.max(self.data, d => d.y)]);
-
-        const ymin = d3.min( self.data, d => d.y );
-        const ymax = d3.max( self.data, d => d.y );
-        self.yscale.domain(self.data.map(d => d.x))
-                   .paddingInner(0.1);
+        const items = self.data.map(d => d.x);
+        self.yscale.domain(items);
 
         self.render();
     }
@@ -79,14 +117,23 @@ class BarChart {
     render() {
         let self = this;
 
+        const bar_color = 'steelblue';
         self.chart.selectAll("rect")
             .data(self.data)
-            .enter()
-            .append("rect")
+            //.enter()
+            //.append("rect")
+            .join("rect")
+            .transition().duration(1000)
             .attr('x', 0)
             .attr("y", d => self.yscale(d.x))
             .attr("width", d => self.xscale(d.y))
-            .attr("height", 5);
+            .attr("height", self.yscale.bandwidth())
+            .attr("fill", bar_color);
 
+        self.xaxis_group.call(self.xaxis);
+        self.yaxis_group.call(self.yaxis);
     }
+    
+    
 }
+
