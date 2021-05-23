@@ -1,4 +1,4 @@
-d3.csv("https://matsukiyuma.github.io/InfoVis2021/W10/data5.csv")
+d3.csv("https://matsukiyuma.github.io/InfoVis2021/W10/data6.csv")
     .then( data => {
         data.forEach( d => { d.x = +d.x; d.y = +d.y; });
 
@@ -118,13 +118,32 @@ d3.csv("https://matsukiyuma.github.io/InfoVis2021/W10/data5.csv")
                 .append("circle")
                 .attr("cx", d => self.xscale( d.x ) )
                 .attr("cy", d => self.yscale( d.y ) )
-                .attr("r", d => d.r );
+                .attr("r", d => d.r )
+                .style("fill",d => d.b);
     
             self.xaxis_group
                 .call( self.xaxis );
     
             self.yaxis_group
                 .call( self.yaxis );
+
+            self.chart.selectAll("circle")
+                .data(self.data)
+                .on('mouseover', (e,d) => {
+                      d3.select('#tooltip')
+                        .style('opacity', 1)
+                        .html(`<div class="tooltip-label">(${d.a})</div>(${d.x}, ${d.y})`);
+                })
+                .on('mousemove', (e) => {
+                    const padding = 10;
+                    d3.select('#tooltip')
+                        .style('left', (e.pageX + padding) + 'px')
+                        .style('top', (e.pageY + padding) + 'px');
+                })
+                .on('mouseleave', () => {
+                    d3.select('#tooltip')
+                        .style('opacity', 0);
+                });
         }
     }
     
